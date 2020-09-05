@@ -51,8 +51,8 @@ func maxResDist(pos int64, unp *uniprot.UniProt, p *pdb.PDB) (furthest residueDi
 }
 
 func minGlycoDist(pos int64, unp *uniprot.UniProt, p *pdb.PDB) (closest residueDistance, closest2nd residueDistance, err error) {
-	if len(unp.PTMs.Glycosilations) < 2 {
-		return closest, closest2nd, errors.New("sequence does not have at least two glyco sites")
+	if len(unp.PTMs.Glycosilations) < 1 {
+		return closest, closest2nd, errors.New("sequence does not have at least one glyco site")
 	}
 
 	// Glycosilation site residues (asparagines) in structure
@@ -70,8 +70,8 @@ func minGlycoDist(pos int64, unp *uniprot.UniProt, p *pdb.PDB) (closest residueD
 		}
 	}
 
-	if len(glycoSites) < 2 {
-		return closest, closest2nd, errors.New("crystal does not cover at least two glyco sites")
+	if len(glycoSites) < 1 {
+		return closest, closest2nd, errors.New("crystal does not cover at least one glyco site")
 	}
 
 	// Sort sites by 3D distance
@@ -79,5 +79,24 @@ func minGlycoDist(pos int64, unp *uniprot.UniProt, p *pdb.PDB) (closest residueD
 		return glycoSites[i].Distance < glycoSites[j].Distance
 	})
 
-	return glycoSites[0], glycoSites[1], nil
+	closest = glycoSites[0]
+	if len(glycoSites) > 1 {
+		closest2nd = glycoSites[1]
+	} else {
+		closest2nd = residueDistance{
+			UnpPos: 0, Residue: nil, Distance: math.NaN(),
+		}
+	}
+
+	return closest, closest2nd, nil
+}
+
+func coveredGlycoSites(unp *uniprot.UniProt, p *pdb.PDB) (quantity int64) {
+	for _, site := range unp.PTMs.Glycosilations {
+		if _, ok := p.UniProtPositions[unp.ID][site.Position]; ok {
+			quantity++
+		}
+	}
+
+	return quantity
 }
