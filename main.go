@@ -22,7 +22,7 @@ func main() {
 
 	writer := csv.NewWriter(fOut)
 	defer writer.Flush()
-	writer.Write([]string{"UniProtID", "PDB ID", "Pos", "ClosestGlycoPos", "ClosestGlycoDistance", "2ndClosestGlycoPos", "2ndClosestGlycoDistance", "FurthestResPos", "FurthestResDistance"})
+	writer.Write([]string{"UniProtID", "GlycoSites", "CoveredGlycoSites", "PDB ID", "Pos", "ClosestGlycoPos", "ClosestGlycoDistance", "2ndClosestGlycoPos", "2ndClosestGlycoDistance", "FurthestResPos", "FurthestResDistance"})
 
 	f, _ := os.Open("unps.txt")
 	scanner := bufio.NewScanner(f)
@@ -66,6 +66,8 @@ func main() {
 
 					line := []string{
 						unp.ID,
+						fmt.Sprintf("%d", len(unp.PTMs.Glycosilations)),
+						fmt.Sprintf("%d", coveredGlycoSites(unp, pdb)),
 						pdb.ID,
 						fmt.Sprintf("%d", pos),
 						fmt.Sprintf("%d", site.UnpPos),
